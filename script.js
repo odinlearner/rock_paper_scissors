@@ -1,50 +1,57 @@
+const MAX_ROUNDS = 5;
 const MOVES = {
     rock: { value: "Rock", id: 1 },
     paper: { value: "Paper", id: 2 },
     scissors: { value: "Scissors", id: 3 },
 };
+const DEFAULT_SCORE = { player: 0, cpu: 0, ties: 0, round: 0 };
+let score;
+
+function updateScoreBoard() {
+    document.getElementById("player-score").innerText = score.player;
+    document.getElementById("cpu-score").innerText = score.cpu;
+    document.getElementById("current-round").innerText = score.round;
+}
+
+function endGame() {
+    document.querySelectorAll("#moves button").forEach(el => el.disabled=true);
+    
+    const result = document.getElementById("result");
+    result.innerText = getWinner();
+    result.style.visibility = "";
+}
+
+function reset() {
+    score = {...DEFAULT_SCORE};
+    updateScoreBoard();
+    document.getElementById("result").style.visibility = "hidden";
+    document.getElementById("max-round").innerText = MAX_ROUNDS;
+    document.querySelectorAll("#moves button").forEach(el => el.disabled=false);
+}
 
 function getComputerChoice() {
     const randomIdx = Math.floor(Math.random() * 3);
     return Object.values(MOVES)[randomIdx];
 }
 
-function getPlayerChoice() {
-    let move = "";
-
-    while (true) {
-        move = prompt("choose Rock/Paper/Scissors").trim().toLowerCase();
-        if (/^(rock|paper|scissors)$/.test(move)) break;
-    }
-
-    return MOVES[move.toLowerCase()];
-}
-
-function playRound() {
+function playRound(move) {
     const computerSelection = getComputerChoice();
-    const playerSelection = getPlayerChoice()
-
-    console.log(`${playerSelection.value} (player) vs ${computerSelection.value} (CPU)`);
+    const playerSelection = MOVES[move.toLowerCase()];
 
     const winner = (3 + playerSelection.id - computerSelection.id) % 3;
-    return winner;
-}
-
-function game(n_rounds=5) {
-    console.log(`Game started with ${n_rounds} rounds`);
+    if (winner === 0) score.ties += 1;
+    if (winner === 1) score.player += 1;
+    if (winner === 2) score.cpu += 1;
+    score.round += 1;
+    updateScoreBoard();
     
-    let score = { player: 0, cpu: 0, ties: 0 };
-    for (let round = 1; round <= n_rounds; round++) {
-        console.log(`Round ${round} / ${n_rounds}`);
-        const winner = playRound();
-        if (winner === 0) score.ties += 1;
-        if (winner === 1) score.player += 1;
-        if (winner === 2) score.cpu += 1;
-    }
-
-    console.log("Game ended");
-    console.log("Score: ", score);
-    if (score.player > score.cpu) console.log("Player won!");
-    if (score.player < score.cpu) console.log("Computer won!");
-    if (score.player === score.cpu) console.log("No winner");
+    if (score.round >= MAX_ROUNDS) endGame(); 
 }
+
+function getWinner() {
+    if (score.player > score.cpu) return "Player won!";
+    if (score.player < score.cpu) return "Computer won!";
+    if (score.player === score.cpu) return "No winner";
+}
+
+reset();
